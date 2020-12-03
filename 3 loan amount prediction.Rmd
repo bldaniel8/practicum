@@ -1,0 +1,115 @@
+---
+title: "ALG3. LOAN AMOUNT THRESHOLD ESTIMATION"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Read data set
+
+```{r}
+# Import librarIES
+library(carData)
+library(car)
+library(corrplot)
+
+# Read loans data set
+loans = read.csv("loans.csv",head=T)
+row.cnt = nrow(loans)
+row.cnt
+# 606 rows. 
+# Split the data into training and testing sets at 66%
+testd = loans[(row.cnt-150):row.cnt,]
+nrow(testd)
+traind = loans[1:(row.cnt-151),]
+nrow(traind)
+```
+
+# Boxplot
+
+```{r}
+boxplot(loan_amt~birth_yy, data = traind, ylab = "Local Currency", xlab = "Years", main="Loan Amount vs. Birth Year", col="gray", pch = 16 )
+
+```
+
+# Plotos for each predictor
+
+
+```{r}
+options(repr.plot.width = 10, repr.plot.height = 6)
+# Grid the plots
+par(mfrow=c(2,4))
+
+plot(loan_amt~avg_sal, data=traind, main="Amt vs Avg salary", col="grey", pch = 16)
+abline(lm(loan_amt~avg_sal, data=traind), col="Red")
+
+plot(loan_amt~birth_yy, data=traind, main="Amt vs Birth year", col="grey", pch = 16)
+abline(lm(loan_amt~birth_yy, data=traind), col="Red")
+
+plot(loan_amt~ttl_txs, data=traind, main="Amt vs Total Transactions", col="grey", pch = 16)
+abline(lm(loan_amt~ttl_txs, data=traind), col="Red")
+
+plot(loan_amt~deps, data=traind, main="Amt vs Deposit Transactions", col="grey", pch = 16)
+abline(lm(loan_amt~deps, data=traind), col="Red")
+
+plot(loan_amt~deps_amt, data=traind, main="Amt vs Deposits Amount", col="grey", pch = 16)
+abline(lm(loan_amt~deps_amt, data=traind), col="Red")
+
+plot(loan_amt~withs, data=traind, main="Amt vs Withdraws transactions", col="grey", pch = 16)
+abline(lm(loan_amt~withs, data=traind), col="Red")
+
+plot(loan_amt~withs_amt, data=traind, main="Amt vs Withdraws Amount", col="grey", pch = 16)
+abline(lm(loan_amt~withs_amt, data=traind), col="Red")
+
+plot(loan_amt~fin_bal, data=traind, main="Amt vs Final Balance", col="grey", pch = 16)
+abline(lm(loan_amt~fin_bal, data=traind), col="Red")
+```
+
+
+
+# Correlation Matrix
+
+```{r}
+# Create correlation matrix
+options(repr.plot.width = 10, repr.plot.height = 6)
+par(mfrow=c(1,1))
+corr <- cor(traind[,-1])
+corrplot(corr, method = "number", type = "upper", tl.col="black")
+```
+
+# LINEAR REGR MODEL
+
+```{r}
+
+# Create model
+model_a = lm(loan_amt ~ ., data=traind)
+summary(model_a)
+ld.vars <- attributes(alias(model_a)$Complete)$dimnames[[1]]
+
+#model_a = lm(loan_amt ~ avg_sal + birth_yy + ttl_txs + deps + deps_amt + withs_amt, data=traind)
+#summary(model_a)
+
+#model_a2 = lm(loan_amt ~ avg_sal + birth_yy + ttl_txs + deps + deps_amt + withs + withs_amt + fin_bal, data=traind)
+#summary(model_a2)
+
+#model_a3 = lm(loan_amt ~ ttl_txs + fin_bal, data=traind)
+#summary(model_a3)
+```
+
+# COOK DISTANCE
+
+```{r}
+
+cook = cooks.distance(model_a)
+cat("Outlier row number(s):", which(cook > 1))
+plot(x = model_a, which = 4, col = 'red', id.n = 1)
+abline(h = 1, col = 'gray', lty = 4)
+
+```
+
+
